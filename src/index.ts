@@ -10,13 +10,13 @@ import fs from 'fs';
 import logger from './logger';
 import obfuscate from './obfuscate';
 
-// Load token from .env
 const token = process.env.DISCORD_TOKEN;
-const MAX_SIZE = 40000; // 40kB max size
+const MAX_SIZE = 40000;
+
+const TAG = '-- obfuscated by y8y9 obf https://discord.gg/2DQbVrXJ8A\n';
 
 logger.log('Bot is starting ...');
 
-// Create Discord Bot Client
 const client = new Client({
     intents: [
         Intents.FLAGS.DIRECT_MESSAGES,
@@ -25,10 +25,9 @@ const client = new Client({
     partials: ['CHANNEL'],
 });
 
-// Login using token
 client.login(token);
 
-client.once('ready', () => { // When the client is ready
+client.once('ready', () => {
     logger.log(`Logged in as ${(client.user?.tag || 'Unknown').cyan}`);
 });
 
@@ -52,7 +51,7 @@ client.on('interactionCreate', async (interaction) => {
         interaction.update({
             embeds: [
                 {
-                    title: 'Prometheus Obfuscator',
+                    title: 'y8y9 Obf',
                     description: 'Something went wrong. Please try again.',
                     color: '#ff8800',
                 },
@@ -69,22 +68,19 @@ client.on('interactionCreate', async (interaction) => {
     const { message } = buttonInfo;
     interaction.update({});
 
-    // Log obfuscations
     console.log(`${(buttonInfo.tag || 'Unknown User').cyan} -> ${buttonInfo.url} @ ${buttonInfo.preset}`);
 
-    // Update Message
     await message.edit({
         embeds: [
             {
-                title: 'Prometheus Obfuscator',
-                description: `🔄 Uploading your file ...\n🔄 Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                title: 'y8y9 Obf',
+                description: `ðŸ”„ Uploading your file ...\nðŸ”„ Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
                 color: '#ff8800',
             },
         ],
         components: [],
     });
 
-    // Download file
     const tmpFile = tmp.fileSync({ postfix: '.lua' });
 
     const response = await Axios({
@@ -97,8 +93,8 @@ client.on('interactionCreate', async (interaction) => {
         message.edit({
             embeds: [
                 {
-                    title: 'Prometheus Obfuscator',
-                    description: 'The max filesize for the obfuscator bot is 40KB.\nIf you want to obfuscate larger files, please use the standalone version.',
+                    title: 'y8y9 Obf',
+                    description: 'The max filesize is 40KB.',
                     color: '#ff0000',
                 },
             ],
@@ -109,22 +105,16 @@ client.on('interactionCreate', async (interaction) => {
 
     response.data.pipe(fs.createWriteStream(tmpFile.name));
 
-    // Wait for download to complete
     try {
         await new Promise<void>((resolve, reject) => {
-            response.data.on('end', () => {
-                resolve();
-            });
-
-            response.data.on('error', () => {
-                reject();
-            });
+            response.data.on('end', () => { resolve(); });
+            response.data.on('error', () => { reject(); });
         });
     } catch (e) {
         message.edit({
             embeds: [
                 {
-                    title: 'Prometheus Obfuscator',
+                    title: 'y8y9 Obf',
                     description: 'Upload failed! Please try again.',
                     color: '#ff0000',
                 },
@@ -134,12 +124,11 @@ client.on('interactionCreate', async (interaction) => {
         return;
     }
 
-    // Update Message
     await message.edit({
         embeds: [
             {
-                title: 'Prometheus Obfuscator',
-                description: `✅ Uploading your file ...\n🔄 Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                title: 'y8y9 Obf',
+                description: `âœ… Uploading your file ...\nðŸ”„ Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
                 color: '#ff8800',
             },
         ],
@@ -153,7 +142,7 @@ client.on('interactionCreate', async (interaction) => {
         message.edit({
             embeds: [
                 {
-                    title: 'Prometheus Obfuscator',
+                    title: 'y8y9 Obf',
                     description: `Obfuscation failed:\n${e}`,
                     color: '#ff0000',
                 },
@@ -163,20 +152,24 @@ client.on('interactionCreate', async (interaction) => {
         return;
     }
 
-    // Update Message
     await message.edit({
         embeds: [
             {
-                title: 'Prometheus Obfuscator',
-                description: `✅ Uploading your file ...\n✅ Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                title: 'y8y9 Obf',
+                description: `âœ… Uploading your file ...\nâœ… Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
                 color: '#ff8800',
             },
         ],
         components: [],
     });
 
-    // Update Message
-    const attachment = new MessageAttachment(outFile.name, 'obfuscated.lua');
+    // Leer el archivo obfuscado y agregar el tag al inicio
+    const obfuscatedContent = fs.readFileSync(outFile.name, 'utf8');
+    const taggedContent = TAG + obfuscatedContent;
+    const taggedFile = tmp.fileSync({ postfix: '.lua' });
+    fs.writeFileSync(taggedFile.name, taggedContent, 'utf8');
+
+    const attachment = new MessageAttachment(taggedFile.name, 'obfuscated.lua');
     const fileMessage = await message.channel.send({
         files: [attachment],
     });
@@ -185,7 +178,7 @@ client.on('interactionCreate', async (interaction) => {
         message.edit({
             embeds: [
                 {
-                    title: 'Prometheus Obfuscator',
+                    title: 'y8y9 Obf',
                     description: 'Download failed! Please try again.',
                     color: '#ff0000',
                 },
@@ -199,22 +192,21 @@ client.on('interactionCreate', async (interaction) => {
     await message.edit({
         embeds: [
             {
-                title: 'Prometheus Obfuscator',
-                description: `✅ Uploading your file ...\n✅ Obfuscating your file using ${buttonInfo?.preset} Preset ...\n✅ Downloading your file ...\n\n🔗 [Download](${url})`,
+                title: 'y8y9 Obf',
+                description: `âœ… Uploading your file ...\nâœ… Obfuscating your file using ${buttonInfo?.preset} Preset ...\nâœ… Downloading your file ...\n\nðŸ”— [Download](${url})`,
                 color: '#00ff00',
             },
         ],
         components: [],
     });
 
-    // Delete Temp files
     outFile.removeCallback();
+    taggedFile.removeCallback();
     tmpFile.removeCallback();
 });
 
 client.on('messageCreate', async (message) => {
     if (!message.author.bot) {
-        // Handle file upload
         const file = message.attachments.first()?.url;
         if (!file) {
             message.reply('Please upload a file!');
@@ -239,11 +231,11 @@ client.on('messageCreate', async (message) => {
                     .setStyle('DANGER'),
             );
 
-        const content = 'For much more options, please use the standalone version.\n\nSelect the Preset to use:';
+        const content = 'Select the Preset to use:';
 
         const msg = await message.reply({
             embeds: [{
-                title: 'Prometheus Obfuscator',
+                title: 'y8y9 Obf',
                 color: '#ff8800',
                 description: content,
             }],
@@ -273,3 +265,4 @@ client.on('messageCreate', async (message) => {
         });
     }
 });
+    
