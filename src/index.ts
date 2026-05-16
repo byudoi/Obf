@@ -53,7 +53,7 @@ client.on('interactionCreate', async (interaction) => {
                 {
                     title: 'y8y9 Obf',
                     description: 'Something went wrong. Please try again.',
-                    color: '#ff8800',
+                    color: 0xff8800,
                 },
             ],
             components: [],
@@ -74,8 +74,8 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [
             {
                 title: 'y8y9 Obf',
-                description: `ðŸ”„ Uploading your file ...\nðŸ”„ Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
-                color: '#ff8800',
+                description: `Uploading your file ...\nObfuscating your file using ${buttonInfo?.preset} Preset ...\nPlease wait...`,
+                color: 0xff8800,
             },
         ],
         components: [],
@@ -95,7 +95,7 @@ client.on('interactionCreate', async (interaction) => {
                 {
                     title: 'y8y9 Obf',
                     description: 'The max filesize is 40KB.',
-                    color: '#ff0000',
+                    color: 0xff0000,
                 },
             ],
             components: [],
@@ -116,7 +116,7 @@ client.on('interactionCreate', async (interaction) => {
                 {
                     title: 'y8y9 Obf',
                     description: 'Upload failed! Please try again.',
-                    color: '#ff0000',
+                    color: 0xff0000,
                 },
             ],
             components: [],
@@ -128,8 +128,8 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [
             {
                 title: 'y8y9 Obf',
-                description: `âœ… Uploading your file ...\nðŸ”„ Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
-                color: '#ff8800',
+                description: `✅ Uploading your file ...\n🔄 Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                color: 0xff8800,
             },
         ],
         components: [],
@@ -144,7 +144,7 @@ client.on('interactionCreate', async (interaction) => {
                 {
                     title: 'y8y9 Obf',
                     description: `Obfuscation failed:\n${e}`,
-                    color: '#ff0000',
+                    color: 0xff0000,
                 },
             ],
             components: [],
@@ -156,8 +156,8 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [
             {
                 title: 'y8y9 Obf',
-                description: `âœ… Uploading your file ...\nâœ… Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
-                color: '#ff8800',
+                description: `✅ Uploading your file ...\n✅ Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                color: 0xff8800,
             },
         ],
         components: [],
@@ -169,32 +169,26 @@ client.on('interactionCreate', async (interaction) => {
     const taggedFile = tmp.fileSync({ postfix: '.lua' });
     fs.writeFileSync(taggedFile.name, taggedContent, 'utf8');
 
+    // Mandar el archivo directamente al canal (sin borrar el mensaje para que la URL no expire)
     const attachment = new MessageAttachment(taggedFile.name, 'obfuscated.lua');
-    const fileMessage = await message.channel.send({
+    await message.channel.send({
+        embeds: [
+            {
+                title: 'y8y9 Obf',
+                description: 'Obfuscation complete! Here is your file:',
+                color: 0x00ff00,
+            },
+        ],
         files: [attachment],
     });
-    const url = fileMessage.attachments.first()?.url;
-    if (!url) {
-        message.edit({
-            embeds: [
-                {
-                    title: 'y8y9 Obf',
-                    description: 'Download failed! Please try again.',
-                    color: '#ff0000',
-                },
-            ],
-            components: [],
-        });
-        return;
-    }
-    fileMessage.delete();
 
+    // Actualizar el mensaje de progreso
     await message.edit({
         embeds: [
             {
                 title: 'y8y9 Obf',
-                description: `âœ… Uploading your file ...\nâœ… Obfuscating your file using ${buttonInfo?.preset} Preset ...\nâœ… Downloading your file ...\n\nðŸ”— [Download](${url})`,
-                color: '#00ff00',
+                description: 'Uploading your file ... done\nObfuscating your file using ' + buttonInfo?.preset + ' Preset ... done\nFile sent above!',
+                color: 0x00ff00,
             },
         ],
         components: [],
@@ -236,7 +230,7 @@ client.on('messageCreate', async (message) => {
         const msg = await message.reply({
             embeds: [{
                 title: 'y8y9 Obf',
-                color: '#ff8800',
+                color: 0xff8800,
                 description: content,
             }],
             components: [row],
@@ -265,4 +259,3 @@ client.on('messageCreate', async (message) => {
         });
     }
 });
-    
