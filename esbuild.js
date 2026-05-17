@@ -4,9 +4,9 @@ require('esbuild').build({
   entryPoints: ['./src/index.ts'],
   sourceRoot: './src',
   bundle: true,
+  platform: 'node',
   outfile: 'index.js',
   minify: true,
   plugins: [nodeExternalsPlugin()],
-  external: ['fs', 'child_process'],
   minifyWhitespace: false,
 }).catch(() => process.exit(1));
