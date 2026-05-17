@@ -1,15 +1,274 @@
-(()=>{var C=Object.create;var w=Object.defineProperty;var M=Object.getOwnPropertyDescriptor;var A=Object.getOwnPropertyNames;var R=Object.getPrototypeOf,U=Object.prototype.hasOwnProperty;var i=(e=>typeof require!="undefined"?require:typeof Proxy!="undefined"?new Proxy(e,{get:(t,o)=>(typeof require!="undefined"?require:t)[o]}):e)(function(e){if(typeof require!="undefined")return require.apply(this,arguments);throw new Error('Dynamic require of "'+e+'" is not supported')});var D=(e,t,o,s)=>{if(t&&typeof t=="object"||typeof t=="function")for(let n of A(t))!U.call(e,n)&&n!==o&&w(e,n,{get:()=>t[n],enumerable:!(s=M(t,n))||s.enumerable});return e};var m=(e,t,o)=>(o=e!=null?C(R(e)):{},D(t||!e||!e.__esModule?w(o,"default",{value:e,enumerable:!0}):o,e));var L=i("dotenv/config"),r=i("discord.js"),B=i("@colors/colors"),S=i("uuid"),P=m(i("tmp")),O=m(i("axios")),E=m(i("fs"));var l={log:(...e)=>{console.log("[PROMETHEUS]".magenta,...e)},warn:(...e)=>{console.warn("[PROMETHEUS]".yellow,...e)},error:(...e)=>{console.error("[PROMETHEUS]".red,...e)}};var h=m(i("tmp")),y=i("child_process");function p(e,t){return new Promise((o,s)=>{let n=h.default.fileSync(),a=(0,y.spawn)("./bin/luajit.exe",["./lua/cli.lua","--preset",t,e,"--out",n.name]);a.stderr.on("data",c=>{l.error(c.toString()),s(c.toString())}),a.on("close",()=>{o(n)})})}var k=process.env.DISCORD_TOKEN;l.log("Bot is starting ...");var u=new r.Client({intents:[r.Intents.FLAGS.DIRECT_MESSAGES,r.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS],partials:["CHANNEL"]});u.login(k);u.once("ready",()=>{l.log(`Logged in as ${(u.user?.tag||"Unknown").cyan}`)});var d=new Map;u.on("interactionCreate",async e=>{if(!e.isButton())return;let t=d.get(e.customId);if(!t){e.update({embeds:[{title:"Prometheus Obfuscator",description:"Something went wrong. Please try again.",color:"#ff8800"}],components:[]});return}let{message:o}=t;e.update({}),console.log(`${(t.tag||"Unknown User").cyan} -> ${t.url} @ ${t.preset}`),await o.edit({embeds:[{title:"Prometheus Obfuscator",description:`\u{1F504} Uploading your file ...
-\u{1F504} Obfuscating your file using ${t?.preset} Preset ...
-\u{1F504} Downloading your file ...`,color:"#ff8800"}],components:[]});let s=P.default.fileSync({postfix:".lua"}),n=await(0,O.default)({method:"GET",url:t.url,responseType:"stream"});if(n.headers["content-length"]&&Number.parseInt(n.headers["content-length"],10)>4e4){o.edit({embeds:[{title:"Prometheus Obfuscator",description:`The max filesize for the obfuscator bot is 40KB.
-If you want to obfuscate larger files, please use the standalone version.`,color:"#ff0000"}],components:[]});return}n.data.pipe(E.default.createWriteStream(s.name));try{await new Promise((f,I)=>{n.data.on("end",()=>{f()}),n.data.on("error",()=>{I()})})}catch{o.edit({embeds:[{title:"Prometheus Obfuscator",description:"Upload failed! Please try again.",color:"#ff0000"}],components:[]});return}await o.edit({embeds:[{title:"Prometheus Obfuscator",description:`\u2705 Uploading your file ...
-\u{1F504} Obfuscating your file using ${t?.preset} Preset ...
-\u{1F504} Downloading your file ...`,color:"#ff8800"}],components:[]});let a;try{a=await p(s.name,t.preset)}catch(f){o.edit({embeds:[{title:"Prometheus Obfuscator",description:`Obfuscation failed:
-${f}`,color:"#ff0000"}],components:[]});return}await o.edit({embeds:[{title:"Prometheus Obfuscator",description:`\u2705 Uploading your file ...
-\u2705 Obfuscating your file using ${t?.preset} Preset ...
-\u{1F504} Downloading your file ...`,color:"#ff8800"}],components:[]});let c=new r.MessageAttachment(a.name,"obfuscated.lua"),g=await o.channel.send({files:[c]}),b=g.attachments.first()?.url;if(!b){o.edit({embeds:[{title:"Prometheus Obfuscator",description:"Download failed! Please try again.",color:"#ff0000"}],components:[]});return}g.delete(),await o.edit({embeds:[{title:"Prometheus Obfuscator",description:`\u2705 Uploading your file ...
-\u2705 Obfuscating your file using ${t?.preset} Preset ...
-\u2705 Downloading your file ...
+import 'dotenv/config';
+import {
+    Client, Intents, MessageButton, MessageActionRow, Message, MessageAttachment,
+} from 'discord.js';
+import '@colors/colors';
+import { v4 as uuid } from 'uuid';
+import tmp from 'tmp';
+import Axios from 'axios';
+import fs from 'fs';
+import logger from './logger';
+import obfuscate from './obfuscate';
 
-\u{1F517} [Download](${b})`,color:"#00ff00"}],components:[]}),a.removeCallback(),s.removeCallback()});u.on("messageCreate",async e=>{if(!e.author.bot){let t=e.attachments.first()?.url;if(!t){e.reply("Please upload a file!");return}let o=new Array(3).fill(0).map(()=>(0,S.v4)()),s=new r.MessageActionRow().addComponents(new r.MessageButton().setCustomId(o[0]).setLabel("Weak").setStyle("SUCCESS"),new r.MessageButton().setCustomId(o[1]).setLabel("Medium").setStyle("PRIMARY"),new r.MessageButton().setCustomId(o[2]).setLabel("Strong").setStyle("DANGER")),n=`For much more options, please use the standalone version.
+const token = process.env.DISCORD_TOKEN;
+const MAX_SIZE = 40000;
 
-Select the Preset to use:`,a=await e.reply({embeds:[{title:"Prometheus Obfuscator",color:"#ff8800",description:n}],components:[s]});d.set(o[0],{url:t,preset:"Weak",tag:e.author.tag,message:a}),d.set(o[1],{url:t,preset:"Medium",tag:e.author.tag,message:a}),d.set(o[2],{url:t,preset:"Strong",tag:e.author.tag,message:a})}});})();
+
+
+logger.log('Bot is starting ...');
+
+const client = new Client({
+    intents: [
+        Intents.FLAGS.DIRECT_MESSAGES,
+        Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+    ],
+    partials: ['CHANNEL', 'MESSAGE'],
+});
+
+client.login(token);
+
+client.once('ready', () => {
+    logger.log(`Logged in as ${(client.user?.tag || 'Unknown').cyan}`);
+});
+
+interface ButtonInfo {
+  url: string;
+  preset: string;
+  tag: string;
+  message: Message,
+  buttonIds: string[],
+}
+
+const buttonInfos = new Map<string, ButtonInfo>();
+
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) {
+        return;
+    }
+
+    const buttonInfo = buttonInfos.get(interaction.customId);
+    if (!buttonInfo) {
+        interaction.update({
+            embeds: [
+                {
+                    title: 'y8y9 Obf',
+                    description: 'Something went wrong. Please try again.',
+                    color: 0xff8800,
+                },
+            ],
+            components: [],
+        });
+        return;
+    }
+
+    buttonInfo.buttonIds.forEach((id) => {
+        buttonInfos.delete(id);
+    });
+
+    const { message } = buttonInfo;
+    interaction.update({});
+
+    console.log(`${(buttonInfo.tag || 'Unknown User').cyan} -> ${buttonInfo.url} @ ${buttonInfo.preset}`);
+
+    await message.edit({
+        embeds: [
+            {
+                title: 'y8y9 Obf',
+                description: `Uploading your file ...\nObfuscating your file using ${buttonInfo?.preset} Preset ...\nPlease wait...`,
+                color: 0xff8800,
+            },
+        ],
+        components: [],
+    });
+
+    const tmpFile = tmp.fileSync({ postfix: '.lua' });
+
+    const response = await Axios({
+        method: 'GET',
+        url: buttonInfo.url,
+        responseType: 'stream',
+    });
+
+    if (response.headers['content-length'] && Number.parseInt(response.headers['content-length'], 10) > MAX_SIZE) {
+        message.edit({
+            embeds: [
+                {
+                    title: 'y8y9 Obf',
+                    description: 'The max filesize is 40KB.',
+                    color: 0xff0000,
+                },
+            ],
+            components: [],
+        });
+        return;
+    }
+
+    response.data.pipe(fs.createWriteStream(tmpFile.name));
+
+    try {
+        await new Promise<void>((resolve, reject) => {
+            response.data.on('end', () => { resolve(); });
+            response.data.on('error', () => { reject(); });
+        });
+    } catch (e) {
+        message.edit({
+            embeds: [
+                {
+                    title: 'y8y9 Obf',
+                    description: 'Upload failed! Please try again.',
+                    color: 0xff0000,
+                },
+            ],
+            components: [],
+        });
+        return;
+    }
+
+    await message.edit({
+        embeds: [
+            {
+                title: 'y8y9 Obf',
+                description: `✅ Uploading your file ...\n🔄 Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                color: 0xff8800,
+            },
+        ],
+        components: [],
+    });
+
+    let outFile;
+    try {
+        outFile = await obfuscate(tmpFile.name, buttonInfo.preset);
+    } catch (e) {
+        message.edit({
+            embeds: [
+                {
+                    title: 'y8y9 Obf',
+                    description: `Obfuscation failed:\n${e}`,
+                    color: 0xff0000,
+                },
+            ],
+            components: [],
+        });
+        return;
+    }
+
+    await message.edit({
+        embeds: [
+            {
+                title: 'y8y9 Obf',
+                description: `✅ Uploading your file ...\n✅ Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
+                color: 0xff8800,
+            },
+        ],
+        components: [],
+    });
+
+
+    // Mandar el archivo directamente al canal (sin borrar el mensaje para que la URL no expire)
+    const attachment = new MessageAttachment(outFile.name, 'obfuscated.lua');
+    await message.channel.send({
+        embeds: [
+            {
+                title: 'y8y9 Obf',
+                description: 'Obfuscation complete! Here is your file:',
+                color: 0x00ff00,
+            },
+        ],
+        files: [attachment],
+    });
+
+    // Actualizar el mensaje de progreso
+    await message.edit({
+        embeds: [
+            {
+                title: 'y8y9 Obf',
+                description: 'Uploading your file ... done\nObfuscating your file using ' + buttonInfo?.preset + ' Preset ... done\nFile sent above!',
+                color: 0x00ff00,
+            },
+        ],
+        components: [],
+    });
+
+    outFile.removeCallback();
+    tmpFile.removeCallback();
+});
+
+client.on('messageCreate', async (message) => {
+    if (!message.author.bot) {
+        // Comando .dm en server
+        if (message.content === '.dm') {
+            try {
+                await message.author.send({
+                    embeds: [{
+                        title: 'y8y9 Obf',
+                        color: 0xff8800,
+                        description: 'Envía tu archivo `.lua` aquí para ofuscarlo.\n\nSend your `.lua` file here to obfuscate it.',
+                    }],
+                });
+                await message.reply({ content: '📬 Te mandé un DM!', ephemeral: false });
+            } catch (e) {
+                await message.reply('No pude mandarte DM. Asegúrate de tener los DMs abiertos. / Could not send you a DM. Make sure your DMs are open.');
+            }
+            return;
+        }
+
+        const file = message.attachments.first()?.url;
+        if (!file) {
+            message.reply('Please upload a file!');
+            return;
+        }
+
+        const buttonIds = new Array(3).fill(0).map(() => uuid());
+
+        const row = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId(buttonIds[0])
+                    .setLabel('Weak')
+                    .setStyle('SUCCESS'),
+                new MessageButton()
+                    .setCustomId(buttonIds[1])
+                    .setLabel('Medium')
+                    .setStyle('PRIMARY'),
+                new MessageButton()
+                    .setCustomId(buttonIds[2])
+                    .setLabel('Strong')
+                    .setStyle('DANGER'),
+            );
+
+        const content = 'Select the Preset to use:';
+
+        const msg = await message.reply({
+            embeds: [{
+                title: 'y8y9 Obf',
+                color: 0xff8800,
+                description: content,
+            }],
+            components: [row],
+        });
+
+        buttonInfos.set(buttonIds[0], {
+            url: file,
+            preset: 'Weak',
+            tag: message.author.tag,
+            message: msg,
+            buttonIds,
+        });
+        buttonInfos.set(buttonIds[1], {
+            url: file,
+            preset: 'Medium',
+            tag: message.author.tag,
+            message: msg,
+            buttonIds,
+        });
+        buttonInfos.set(buttonIds[2], {
+            url: file,
+            preset: 'Strong',
+            tag: message.author.tag,
+            message: msg,
+            buttonIds,
+        });
+    }
+});
