@@ -3,7 +3,8 @@ import tmp from 'tmp';
 import path from 'path';
 import fs from 'fs';
 
-const HERCULES_CLI = path.join(process.cwd(), 'hercules', 'hercules.lua');
+const HERCULES_DIR = path.join(process.cwd(), 'hercules');
+const HERCULES_CLI = path.join(HERCULES_DIR, 'hercules.lua');
 
 const PRESET_MAP: Record<string, string> = {
     Weak: '--min',
@@ -29,8 +30,9 @@ export default async function obfuscate(inputFile: string, preset: string): Prom
     const outFile = tmp.fileSync({ postfix: '.lua' });
     fs.copyFileSync(inputFile, outFile.name);
 
+    // cd al directorio de hercules para que encuentre pipeline.lua y módulos
     await runCommand(
-        `lua "${HERCULES_CLI}" "${outFile.name}" ${herculesPreset} --overwrite`
+        `cd "${HERCULES_DIR}" && lua "hercules.lua" "${outFile.name}" ${herculesPreset} --overwrite`
     );
 
     if (!fs.existsSync(outFile.name) || fs.readFileSync(outFile.name).length === 0) {
