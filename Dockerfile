@@ -1,28 +1,20 @@
-FROM debian:latest
+FROM node:16-bullseye-slim
 
-# install nodejs
-RUN apt-get update && apt-get install -y curl
-RUN apt-get install -y nodejs
-RUN apt-get install -y npm
+# Instalar Lua para correr Hercules
+RUN apt-get update && apt-get install -y lua5.3 && rm -rf /var/lib/apt/lists/*
 
-# install lua
-RUN apt-get install -y lua5.3
+WORKDIR /app
 
-# Create app directory
-WORKDIR /usr/src/app
-
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
+# Copiar package files
 COPY package*.json ./
 
+# Instalar dependencias
 RUN npm install
-# If you are building your code for production
-# RUN npm ci --only=production
 
-# Bundle app source
+# Copiar todo el proyecto
 COPY . .
 
+# Compilar TypeScript
 RUN npm run build
 
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]
