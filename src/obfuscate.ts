@@ -3,7 +3,7 @@ import tmp from 'tmp';
 import path from 'path';
 import fs from 'fs';
 
-const HERCULES_CLI = path.join(__dirname, '..', 'hercules', 'hercules.lua');
+const HERCULES_CLI = path.join(process.cwd(), 'hercules', 'hercules.lua');
 
 const PRESET_MAP: Record<string, string> = {
     Weak: '--min',
