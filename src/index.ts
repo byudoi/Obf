@@ -128,7 +128,7 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [
             {
                 title: 'y8y9 Obf',
-                description: `âœ… Uploading your file ...\nðŸ”„ Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
+                description: `✅ Uploading your file ...\n🔄 Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
                 color: 0xff8800,
             },
         ],
@@ -156,7 +156,7 @@ client.on('interactionCreate', async (interaction) => {
         embeds: [
             {
                 title: 'y8y9 Obf',
-                description: `âœ… Uploading your file ...\nâœ… Obfuscating your file using ${buttonInfo?.preset} Preset ...\nðŸ”„ Downloading your file ...`,
+                description: `✅ Uploading your file ...\n✅ Obfuscating your file using ${buttonInfo?.preset} Preset ...\n🔄 Downloading your file ...`,
                 color: 0xff8800,
             },
         ],
