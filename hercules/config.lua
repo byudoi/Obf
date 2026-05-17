@@ -10,7 +10,7 @@ config.settings = {
         enabled = true,
     },
     antitamper = {
-        enabled = true,
+        enabled = false,
     },
     control_flow = {
         enabled = true,
