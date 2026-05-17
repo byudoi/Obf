@@ -75,12 +75,6 @@ return {
                 };
             },
             {
-                Name = "AntiTamper";
-                Settings = {
-                    UseDebug = false;
-                };
-            },
-            {
                 Name = "Vmify";
                 Settings = {
                     
@@ -131,12 +125,6 @@ return {
             },
             {
                 Name = "EncryptStrings";
-                Settings = {
-
-                };
-            },
-            {
-                Name = "AntiTamper";
                 Settings = {
 
                 };
