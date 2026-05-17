@@ -7,7 +7,7 @@ config.settings = {
     watermark_enabled = false,
     final_print = true,
     VirtualMachine = {
-        enabled = true,
+        enabled = false,
     },
     antitamper = {
         enabled = false,
@@ -17,12 +17,12 @@ config.settings = {
         max_fake_blocks = 6,
     },
     StringToExpressions = {
-        enabled = false,
+        enabled = true,
         min_number_length = 100,
         max_number_length = 999,
     },
     string_encoding = {
-        enabled = false,
+        enabled = true,
     },
     WrapInFunction = {
         enabled = true,
