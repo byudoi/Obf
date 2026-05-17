@@ -7,10 +7,10 @@ config.settings = {
     watermark_enabled = true,
     final_print = true,
     VirtualMachine = {
-        enabled = true,
+        enabled = false,
     },
     antitamper = {
-        enabled = true,
+        enabled = false,
     },
     control_flow = {
         enabled = true,
@@ -56,13 +56,10 @@ config.settings = {
 function config.get(key)
     local keys = {}
     for k in key:gmatch("[^.]+") do table.insert(keys, k) end
-
     local value = config
     for _, k in ipairs(keys) do
         value = value[k]
-        if value == nil then
-            return nil
-        end
+        if value == nil then return nil end
     end
     return value
 end
@@ -70,15 +67,11 @@ end
 function config.set(key, new_value)
     local keys = {}
     for k in key:gmatch("[^.]+") do table.insert(keys, k) end
-
     local value = config
     for i = 1, #keys - 1 do
         value = value[keys[i]]
-        if value == nil then
-            return false
-        end
+        if value == nil then return false end
     end
-
     local last_key = keys[#keys]
     if value[last_key] ~= nil then
         value[last_key] = new_value
